@@ -6,8 +6,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
-import javax.inject.Inject;
-import javax.transaction.Transactional;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+import jakarta.transaction.Transactional;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
@@ -32,7 +35,18 @@ public abstract class AbstractSimpleGenericDao<C, I extends Serializable> {
 
     public List<C> getAll() {
         try {
-            return getCurrentSession().createCriteria(entityClass).list();
+            Session session = getCurrentSession();
+            CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+            
+            // Create a CriteriaQuery for the entity class
+            CriteriaQuery<C> criteriaQuery = criteriaBuilder.createQuery(entityClass);
+            Root<C> root = criteriaQuery.from(entityClass);
+            
+            // Select all entities
+            criteriaQuery.select(root);
+            
+            // Execute the query
+            return session.createQuery(criteriaQuery).getResultList();
         } catch (HibernateException e) {
             log.error(e.getMessage(), e);
             throw e;

@@ -23,7 +23,7 @@ import com.jgeppert.struts2.jquery.grid.showcase.dao.EmployeeDao;
 import com.jgeppert.struts2.jquery.grid.showcase.model.Employee;
 import com.opensymphony.xwork2.ActionSupport;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class EmployeesDetailAction extends ActionSupport {
 

@@ -1,16 +1,18 @@
 package com.jgeppert.struts2.jquery.grid.showcase.dao;
 
 import com.jgeppert.struts2.jquery.grid.showcase.model.Customer;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
-import org.hibernate.SQLQuery;
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Projections;
-import org.hibernate.type.StringType;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.Session;
 
-import javax.inject.Named;
+import jakarta.inject.Named;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+
 import java.util.List;
 
 @Named
@@ -18,43 +20,48 @@ public class CustomerDao extends AbstractSimpleGenericDao<Customer, Integer> {
 
     private static final Logger log = LogManager.getLogger(CustomerDao.class);
 
-    @SuppressWarnings("unchecked")
-    public List<Customer> findByCriteria(DetachedCriteria dc, int from, int size) {
+    public List<Customer> findByCriteria(CriteriaQuery<Customer> criteriaQuery, int from, int size) {
         log.debug("Return customers from {} to {}", from, size);
 
+        Session session = getCurrentSession();
         try {
-            Criteria criteria = dc.getExecutableCriteria(getCurrentSession());
-            criteria.setFirstResult(from);
-            criteria.setMaxResults(size);
-            return criteria.list();
+            CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+            CriteriaQuery<Customer> query = criteriaQuery != null ? criteriaQuery : criteriaBuilder.createQuery(Customer.class);
+            List<Customer> results = session.createQuery(query)
+            .setFirstResult(from)
+            .setMaxResults(size)
+            .getResultList();
+            return results;
         } catch (HibernateException e) {
             log.error(e.getMessage(), e);
             throw e;
         }
     }
 
-    public int countByCriteria(DetachedCriteria dc) {
+    public int countByCriteria(CriteriaQuery<Long> criteriaQuery) {
         if (log.isDebugEnabled()) log.debug("count Customers");
 
+        Session session = getCurrentSession();
         try {
-            Criteria criteria = dc.getExecutableCriteria(getCurrentSession());
-            criteria.setProjection(Projections.rowCount());
-            return ((Long) criteria.list().get(0)).intValue();
+            CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+            CriteriaQuery<Long> query = criteriaQuery != null ? criteriaQuery : criteriaBuilder.createQuery(Long.class);
+            
+            Root<Customer> root = query.from(Customer.class);
+            query.select(criteriaBuilder.count(root));
+            return session.createQuery(query).getSingleResult().intValue();
         } catch (HibernateException e) {
             log.error(e.getMessage(), e);
             throw e;
         }
     }
 
-    @SuppressWarnings("unchecked")
     public List<String> findCountrys() {
         if (log.isDebugEnabled()) log.debug("find all country's");
-
+        Session session = getCurrentSession();
         try {
             String queryString = "SELECT DISTINCT c.country FROM CLASSICMODELS.CUSTOMERS c where c.country is not null";
-            SQLQuery q = getCurrentSession().createSQLQuery(queryString);
+            NativeQuery<String> q = session.createNativeQuery(queryString, String.class);
             q.setCacheable(true);
-            q.addScalar("country", StringType.INSTANCE);
             return q.list();
         } catch (HibernateException e) {
             log.error(e.getMessage(), e);
@@ -64,12 +71,16 @@ public class CustomerDao extends AbstractSimpleGenericDao<Customer, Integer> {
 
     public int nextCustomerNumber() {
         log.debug("find next customer number");
-
+        Session session = getCurrentSession();
         try {
-            DetachedCriteria dc = DetachedCriteria.forClass(Customer.class);
-            Criteria criteria = dc.getExecutableCriteria(getCurrentSession());
-            criteria.setProjection(Projections.max("customernumber"));
-            return (Integer) criteria.list().get(0) + 1;
+            CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+            CriteriaQuery<Integer> criteriaQuery = criteriaBuilder.createQuery(Integer.class);
+            Root<Customer> root = criteriaQuery.from(Customer.class);
+            criteriaQuery.select(criteriaBuilder.max(root.get("customernumber")));
+            Integer maxCustomerNumber = session.createQuery(criteriaQuery).getSingleResult();
+
+            return (maxCustomerNumber != null ? maxCustomerNumber + 1 : 1); // Handle case where no customers exist
+
         } catch (HibernateException e) {
             log.error(e.getMessage(), e);
             throw e;

@@ -22,7 +22,7 @@ package com.jgeppert.struts2.jquery.grid.showcase.action;
 import com.jgeppert.struts2.jquery.grid.showcase.dao.CustomerDao;
 import com.opensymphony.xwork2.ActionSupport;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.List;
 
 public class CustomerCountrysAction extends ActionSupport {

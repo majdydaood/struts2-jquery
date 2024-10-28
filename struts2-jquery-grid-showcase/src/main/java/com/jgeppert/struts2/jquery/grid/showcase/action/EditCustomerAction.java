@@ -29,7 +29,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.struts2.convention.annotation.Result;
 import org.apache.struts2.convention.annotation.Results;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.StringTokenizer;
 
 @Results({@Result(name = "error", location = "messages.jsp")})

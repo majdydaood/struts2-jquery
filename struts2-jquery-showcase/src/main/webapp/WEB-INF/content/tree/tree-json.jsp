@@ -66,7 +66,7 @@ import com.jgeppert.struts2.jquery.tree.result.TreeNode;
 import com.opensymphony.xwork2.ActionSupport;
 import org.apache.struts2.util.ServletContextAware;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 @Actions({ @Action(value = &quot;/json-tree-data&quot;, results = { @Result(name = &quot;success&quot;, type = &quot;json&quot;, params = {
 &quot;root&quot;, &quot;nodes&quot; }) }) })
